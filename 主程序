@@ -3,34 +3,32 @@
  */
 
 var http = require('http');
-var url = 'http://www.imooc.com/learn/348';
-var cheerio = require('cheerio');
+var url = 'http://www.imooc.com/learn/348';//当前需要爬取的url地址
+var cheerio = require('cheerio');//cheerio模块使用方法几乎和jquery一样
 
-function printinfo(coureData) {
-    var chapterTitle;
+function printinfo(coureData) {//打印已经爬好的数据
     coureData.forEach(function (item) {
-        chapterTitle  = item.chapterTitle;
-        console.log(chapterTitle + '\n');
+        console.log(item.chapterTitle + '\n');//打印每一章的标题
 
         item.videos.forEach(function (video) {
-            console.log(' 【' + video.id + '】 '+ video.title + '\n');
+            console.log(' 【' + video.id + '】 '+ video.title + '\n');//打印每个视频的id和小标题
         })
     })
 }
 
-function selecttHtml(html) {
-    var $ = cheerio.load(html);
-    var contents = $('.chapter');
+function selecttHtml(html) {//选择自己需要爬取该页面中的那些数据
+    var $ = cheerio.load(html);//解析HTML代码
+    var contents = $('.chapter');//选择类名为chapter的所有标签
 
     var courseData = [];
 
     contents.each(function (item) {
         var content = $(this);
         var text = content.find('.chapter-content').text();
-        var chapterTitle = content.find('strong').text().split(text)[0].trim();
-        var videos = content.find('.video').children('li');
+        var chapterTitle = content.find('strong').text().split(text)[0].trim();//当前章节的标题
+        var videos = content.find('.video').children('li');//所有视频的信息
 
-        var chapterData = {
+        var chapterData = {//每一章数据保存的对象格式
             chapterTitle:chapterTitle,
             videos: []
         };
@@ -43,8 +41,8 @@ function selecttHtml(html) {
             var id = video.attr('href').split('video/')[1];
 
             chapterData.videos.push({
-                title:title,
-                id:id
+                title:title,//每个视频的标题
+                id:id//每个视频的id
             })
 
         })
@@ -54,13 +52,13 @@ function selecttHtml(html) {
     return courseData;
 }
 
-http.get(url,function(res){
+http.get(url,function(res){//获取url地址的源码
     var html = '';
 
-    res.on('data',function (data) {
+    res.on('data',function (data) {//当触发data事件时,就把当前返回的数据保存起来
         html += data.toString('utf-8');
     })
-    res.on('end',function(){
+    res.on('end',function(){//当触发end事件时,即响应已结束，即整个源码都已获取成功了
         //console.log(html);
         var courseData = selecttHtml(html);
         printinfo(courseData);
